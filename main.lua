@@ -102,7 +102,7 @@ model = {}
                                 nn.Narrow(2, 1, 2 *params.rnn_size)(h2h)
                                 })
                             
-    gates =nn.SplitTable(2)(nn.Reshape(2,nhid)(gates))
+    gates =nn.SplitTable(2)(nn.Reshape(2,params.rnn_size)(gates))
     
     local resetgate  =nn.Sigmoid()(nn.SelectTable(1)(gates)) 
 
@@ -200,9 +200,9 @@ function fp(state)
     -- forward prop
     for i = 1, params.seq_length do
         local x = state.data[state.pos]
-        print(x:size())
+        --print(x:size())
         local y = state.data[state.pos + 1]
-        print(y:size())
+        --print(y:size())
         local s = model.s[i - 1]
         model.err[i], model.s[i] = unpack(model.rnns[i]:forward({x, y, s}))
         state.pos = state.pos + 1

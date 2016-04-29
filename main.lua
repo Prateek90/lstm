@@ -48,7 +48,7 @@ model = {}
 
 --local function lstm(x, prev_c, prev_h)
   local function lstm(x, prev_h)
-    -- Calculate all four gates in one go
+    --[[-- Calculate all four gates in one go
     --local i2h              = nn.Linear(params.rnn_size, 4*params.rnn_size)(x)
     local i2h              = nn.Linear(params.rnn_size, 2*params.rnn_size)(x)
     --local h2h              = nn.Linear(params.rnn_size, 4*params.rnn_size)(prev_h)
@@ -92,8 +92,26 @@ model = {}
     local next_h        = nn.CAddTable()({
         nn.CMulTable()({prev_h,newin_gate}),
         nn.CMulTable()({in_transform, newin_gate})        
-        })
+        })--]]
+    
+    local i2h   =nn.Linear(params.rnn_size, 3 *params.rnn_size)(x)
+    
+    local h2h   =nn.Linear(params.rnn_size, 3 * params.rnn_size)(prev_h) 
 
+    local gates =nn.CAddTable()({nn.Narrow(2, 1, 2 *params.rnn_size)(i2h),
+                                nn.Narrow(2, 1, 2 *params.rnn_size)(h2h)
+                                })
+                            
+    gates =nn.SplitTable(2)(nn.Reshape(2,nhid)(gates))
+    
+    local resetgate  =nn.Sigmoid()(nn.SelectTable(1)(gates)) 
+
+    local updategate =nn.Sigmoid()(nn.SelectTable(2)(gates)) 
+    
+    local output =nn.Tanh()(nn.CAddTable()({ nn.Narrow(2, 2 * params.rnn_size+1, params.rnn_size)(i2h),
+                                            nn.CMulTable()({resetgate, nn.Narrow(2, 2 * params.rnn_size+1, params.rnn_size)(h2h)}) })) 
+                                        
+    local next_h = nn.CAddTable()({ prev_h,nn.CMulTable()({ updategate, nn.CSubTable()({output, prev_h,}),}), }) 
 
     return next_h
 end

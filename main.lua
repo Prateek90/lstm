@@ -86,8 +86,8 @@ model = {}
     --})
     --local next_h           = nn.CMulTable()({out_gate, nn.Tanh()(next_c)})
     
-    local res=torch.Tensor():resizeAs(in_gate):fill(1)
-    local newin_gate    = res:add(-in_gate , 1)         
+    --local res=torch.Tensor():resizeAs(in_gate):fill(1)
+    local newin_gate    = nn.CAddTable()({1,-in_gate})         
     local next_h        = nn.CAddTable()({
         nn.CMulTable()({prev_h,newin_gate}),
         nn.CMulTable()({in_transform, newin_gate})        

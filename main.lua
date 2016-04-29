@@ -131,7 +131,7 @@ function create_network()
         local prev_h         = split[layer_idx]
         local dropped        = nn.Dropout(params.dropout)(i[layer_idx - 1])
         --local next_c, next_h = lstm(dropped, prev_c, prev_h)
-        local next_c, next_h = lstm(dropped, prev_h)
+        local next_h = lstm(dropped, prev_h)
         --table.insert(next_s, next_c)
         table.insert(next_s, next_h)
         i[layer_idx] = next_h

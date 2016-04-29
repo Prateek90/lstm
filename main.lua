@@ -74,7 +74,7 @@ model = {}
     
     local transform_gate    =nn.CAddTable()({i2newh , newh2newh})
     
-    local reshape_gate      =nn.Reshape(1,param.rnn_size)(transform_gate)
+    local reshape_gate      =nn.Reshape(1,params.rnn_size)(transform_gate)
     local slice_gate        =nn.SplitTable(1)(reshape_gate)
 
     local in_transform      =nn.Tanh()(nn.SelectTable(1)(slice_gate))    

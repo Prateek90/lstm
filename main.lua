@@ -46,30 +46,54 @@ end
 
 model = {}
 
-local function lstm(x, prev_c, prev_h)
+--local function lstm(x, prev_c, prev_h)
+  local function lstm(x, prev_h)
     -- Calculate all four gates in one go
-    local i2h              = nn.Linear(params.rnn_size, 4*params.rnn_size)(x)
-    local h2h              = nn.Linear(params.rnn_size, 4*params.rnn_size)(prev_h)
+    --local i2h              = nn.Linear(params.rnn_size, 4*params.rnn_size)(x)
+    local i2h              = nn.Linear(params.rnn_size, 2*params.rnn_size)(x)
+    --local h2h              = nn.Linear(params.rnn_size, 4*params.rnn_size)(prev_h)
+    local h2h              = nn.Linear(params.rnn_size, 2*params.rnn_size)(prev_h)
     local gates            = nn.CAddTable()({i2h, h2h})
 
     -- Reshape to (batch_size, n_gates, hid_size)
     -- Then slize the n_gates dimension, i.e dimension 2
-    local reshaped_gates   =  nn.Reshape(4,params.rnn_size)(gates)
+    --local reshaped_gates   =  nn.Reshape(4,params.rnn_size)(gates)
+    local reshaped_gates   =  nn.Reshape(2,params.rnn_size)(gates)
     local sliced_gates     = nn.SplitTable(2)(reshaped_gates)
 
     -- Use select gate to fetch each gate and apply nonlinearity
     local in_gate          = nn.Sigmoid()(nn.SelectTable(1)(sliced_gates))
-    local in_transform     = nn.Tanh()(nn.SelectTable(2)(sliced_gates))
-    local forget_gate      = nn.Sigmoid()(nn.SelectTable(3)(sliced_gates))
-    local out_gate         = nn.Sigmoid()(nn.SelectTable(4)(sliced_gates))
+    --local in_transform     = nn.Tanh()(nn.SelectTable(2)(sliced_gates))
+    local forget_gate      = nn.Sigmoid()(nn.SelectTable(2)(sliced_gates))
+    --local out_gate         = nn.Sigmoid()(nn.SelectTable(4)(sliced_gates))
+    
+    local new_h = nn.CMulTable()({forget_gate,prev_h})
+    
+    local i2newh    =nn.Linear(params.rnn_size , params.rnn_size)(x)
+    local newh2newh =nn.Linear(params.rnn_size , params.rnn_size)(new_h)
+    
+    local transform_gate    =nn.CAddTable()({i2newh , newh2newh})
+    
+    local reshape_gate      =nn.Reshape(1,param.rnn_size)(transform_gate)
+    local slice_gate        =nn.SplitTable(1)(reshape_gate)
 
-    local next_c           = nn.CAddTable()({
-        nn.CMulTable()({forget_gate, prev_c}),
-        nn.CMulTable()({in_gate,     in_transform})
-    })
-    local next_h           = nn.CMulTable()({out_gate, nn.Tanh()(next_c)})
+    local in_transform      =nn.Tanh()(nn.SelectTable(1)(slice_gate))    
+    
 
-    return next_c, next_h
+    --local next_c           = nn.CAddTable()({
+    --    nn.CMulTable()({forget_gate, prev_c}),
+    --    nn.CMulTable()({in_gate,     in_transform})
+    --})
+    --local next_h           = nn.CMulTable()({out_gate, nn.Tanh()(next_c)})
+    
+    local newin_gate    = 1 - in_gate            
+    local next_h        = nn.CAddTable()({
+        nn.CMulTable()({prev_h,newin_gate}),
+        nn.CMulTable()({in_transform, newin_gate})        
+        })
+
+
+    return next_h
 end
 
 function create_network()
@@ -79,13 +103,16 @@ function create_network()
     local i                  = {[0] = nn.LookupTable(params.vocab_size,
                                                     params.rnn_size)(x)}
     local next_s             = {}
-    local split              = {prev_s:split(2 * params.layers)}
+    --local split              = {prev_s:split(2 * params.layers)}
+    local split              = {prev_s:split(params.layers)}
     for layer_idx = 1, params.layers do
-        local prev_c         = split[2 * layer_idx - 1]
-        local prev_h         = split[2 * layer_idx]
+        --local prev_c         = split[2 * layer_idx - 1]
+        --local prev_h         = split[2 * layer_idx]
+        local prev_h         = split[layer_idx]
         local dropped        = nn.Dropout(params.dropout)(i[layer_idx - 1])
-        local next_c, next_h = lstm(dropped, prev_c, prev_h)
-        table.insert(next_s, next_c)
+        --local next_c, next_h = lstm(dropped, prev_c, prev_h)
+        local next_c, next_h = lstm(dropped, prev_h)
+        --table.insert(next_s, next_c)
         table.insert(next_s, next_h)
         i[layer_idx] = next_h
     end
@@ -109,11 +136,13 @@ function setup()
     model.start_s = {}
     for j = 0, params.seq_length do
         model.s[j] = {}
-        for d = 1, 2 * params.layers do
+        --for d = 1, 2 * params.layers do
+        for d = 1, params.layers do
             model.s[j][d] = transfer_data(torch.zeros(params.batch_size, params.rnn_size))
         end
     end
-    for d = 1, 2 * params.layers do
+    --for d = 1, 2 * params.layers do
+    for d = 1, params.layers do
         model.start_s[d] = transfer_data(torch.zeros(params.batch_size, params.rnn_size))
         model.ds[d] = transfer_data(torch.zeros(params.batch_size, params.rnn_size))
     end
@@ -126,7 +155,8 @@ end
 function reset_state(state)
     state.pos = 1
     if model ~= nil and model.start_s ~= nil then
-        for d = 1, 2 * params.layers do
+        --for d = 1, 2 * params.layers do
+        for d = 1, params.layers do
             model.start_s[d]:zero()
         end
     end

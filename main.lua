@@ -136,13 +136,13 @@ function create_network()
         table.insert(next_s, next_h)
         i[layer_idx] = next_h
     end
-    local i=1
+    local j=1
     local h2y                = nn.Linear(params.rnn_size, params.vocab_size)
     local dropped            = nn.Dropout(params.dropout)(i[params.layers])
     local pred               = nn.LogSoftMax()(h2y(dropped))
-    if i==1 then 
+    if j==1 then 
         print(pred) 
-        i=i+1
+        j=j+1
     end
     
     

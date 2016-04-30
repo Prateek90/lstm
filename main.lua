@@ -141,10 +141,8 @@ function create_network()
     local dropped            = nn.Dropout(params.dropout)(i[params.layers])
     local pred               = nn.LogSoftMax()(h2y(dropped))
         
-    print('Prediction = '..pred..'.') 
+    print(pred) 
 
-    
-    
     local err                = nn.ClassNLLCriterion()({pred, y})
     local module             = nn.gModule({x, y, prev_s},
                                       {err, nn.Identity()(next_s)})

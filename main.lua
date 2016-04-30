@@ -136,9 +136,16 @@ function create_network()
         table.insert(next_s, next_h)
         i[layer_idx] = next_h
     end
+    local i=1
     local h2y                = nn.Linear(params.rnn_size, params.vocab_size)
     local dropped            = nn.Dropout(params.dropout)(i[params.layers])
     local pred               = nn.LogSoftMax()(h2y(dropped))
+    if i==1 then 
+        print(pred) 
+        i=i+1
+    end
+    
+    
     local err                = nn.ClassNLLCriterion()({pred, y})
     local module             = nn.gModule({x, y, prev_s},
                                       {err, nn.Identity()(next_s)})

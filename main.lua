@@ -205,7 +205,7 @@ function fp(state)
         local y = state.data[state.pos + 1]
         --print(y:size())
         local s = model.s[i - 1]
-        model.err[i], model.s[i], model.pred[i] = unpack(model.rnns[i]:forward({x, y, s}))
+        model.err[i], model.s[i]= unpack(model.rnns[i]:forward({x, y, s}))
         state.pos = state.pos + 1
     end
     
@@ -227,10 +227,11 @@ function bp(state)
         local y = state.data[state.pos + 1]
         local s = model.s[i - 1]
         -- Why 1?
+        local pred=transfer_data(torch.zeros(1)
         local derr = transfer_data(torch.ones(1))
         -- tmp stores the ds
         local tmp = model.rnns[i]:backward({x, y, s},
-                                           {derr, model.ds})[3]
+                                           {derr, model.ds, pred })[3]
         -- remember (to, from)
         g_replace_table(model.ds, tmp)
     end

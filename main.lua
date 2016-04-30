@@ -136,14 +136,13 @@ function create_network()
         table.insert(next_s, next_h)
         i[layer_idx] = next_h
     end
-    local j=1
+    
     local h2y                = nn.Linear(params.rnn_size, params.vocab_size)
     local dropped            = nn.Dropout(params.dropout)(i[params.layers])
     local pred               = nn.LogSoftMax()(h2y(dropped))
-    if j==1 then 
-        print(pred) 
-        j=j+1
-    end
+        
+    print('Prediction = '..pred..'.') 
+
     
     
     local err                = nn.ClassNLLCriterion()({pred, y})

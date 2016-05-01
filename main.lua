@@ -204,10 +204,11 @@ function fp(state)
     -- forward prop
     for i = 1, params.seq_length do
         local x = state.data[state.pos]
-        --print(x:size())
+        print(x:size())
         local y = state.data[state.pos + 1]
-        --print(y:size())
+        print(y:size())
         local s = model.s[i - 1]
+        print(unpack(model.rnns[i]:forward({x, y, s})):size())
         model.err[i], model.s[i], model.pred[i]= unpack(model.rnns[i]:forward({x, y, s}))
         state.pos = state.pos + 1
     end
@@ -317,6 +318,8 @@ start_time = torch.tic()
 print("Starting training.")
 words_per_step = params.seq_length * params.batch_size
 epoch_size = torch.floor(state_train.data:size(1) / params.seq_length)
+
+print(state_train:size())
 
 while epoch < params.max_max_epoch do
 

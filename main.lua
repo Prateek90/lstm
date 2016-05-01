@@ -220,6 +220,7 @@ function bp(state)
     -- start on a clean slate. Backprop over time for params.seq_length.
     paramdx:zero()
     reset_ds()
+    local pred = torch.zeros(params.seq_length)
     for i = params.seq_length, 1, -1 do
         -- to make the following code look almost like fp
         state.pos = state.pos - 1
@@ -227,7 +228,7 @@ function bp(state)
         local y = state.data[state.pos + 1]
         local s = model.s[i - 1]
         -- Why 1?
-        local pred=transfer_data(torch.zeros(1))
+        
         local derr = transfer_data(torch.ones(1))
         -- tmp stores the ds
         local tmp = model.rnns[i]:backward({x, y, s},

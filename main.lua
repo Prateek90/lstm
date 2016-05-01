@@ -170,7 +170,7 @@ function setup()
     model.core_network = core_network
     model.rnns = g_cloneManyTimes(core_network, params.seq_length)
     model.norm_dw = 0
-    model.pred== transfer_data(torch.zeros(params.seq_length))
+    model.pred= transfer_data(torch.zeros(params.seq_length))
     model.err = transfer_data(torch.zeros(params.seq_length))
 end
 

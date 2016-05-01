@@ -170,6 +170,7 @@ function setup()
     model.core_network = core_network
     model.rnns = g_cloneManyTimes(core_network, params.seq_length)
     model.norm_dw = 0
+    model.pred== transfer_data(torch.zeros(params.seq_length))
     model.err = transfer_data(torch.zeros(params.seq_length))
 end
 
@@ -205,9 +206,11 @@ function fp(state)
         local y = state.data[state.pos + 1]
         --print(y:size())
         local s = model.s[i - 1]
-        model.err[i], model.s[i]= unpack(model.rnns[i]:forward({x, y, s}))
+        model.err[i], model.s[i], model.pred[i]= unpack(model.rnns[i]:forward({x, y, s}))
         state.pos = state.pos + 1
     end
+    
+    print(model.pred)
     
     -- next-forward-prop start state is current-forward-prop's last state
     g_replace_table(model.start_s, model.s[params.seq_length])
@@ -220,7 +223,7 @@ function bp(state)
     -- start on a clean slate. Backprop over time for params.seq_length.
     paramdx:zero()
     reset_ds()
-    local pred = torch.zeros(params.seq_length)
+    --local pred = torch.zeros(params.seq_length)
     for i = params.seq_length, 1, -1 do
         -- to make the following code look almost like fp
         state.pos = state.pos - 1
@@ -232,7 +235,7 @@ function bp(state)
         local derr = transfer_data(torch.ones(1))
         -- tmp stores the ds
         local tmp = model.rnns[i]:backward({x, y, s},
-                                           {derr, model.ds, pred })[3]
+                                           {derr, model.ds})[3]
         -- remember (to, from)
         g_replace_table(model.ds, tmp)
     end

@@ -2,7 +2,7 @@ stringx = require('pl.stringx')
 require 'io'
 require 'nngraph'
 require 'base.lua'
-data = require 'data.lua'
+data = require 'word_data.lua'
 
 data.validdataset(1)
 data.testdataset(1)

@@ -208,8 +208,8 @@ function fp(state)
         local y = state.data[state.pos + 1]
         print(y:size())
         local s = model.s[i - 1]
-        print(unpack(model.rnns[i]:forward({x, y, s})):size(3))
-        model.err[i], model.s[i], model.pred[i]= unpack(model.rnns[i]:forward({x, y, s}))
+        print(unpack(model.rnns[i]:forward({x, y, s})))
+        model.err[i], model.s[i]= unpack(model.rnns[i]:forward({x, y, s}))
         state.pos = state.pos + 1
     end
     

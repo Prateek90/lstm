@@ -213,7 +213,7 @@ function fp(state)
         state.pos = state.pos + 1
     end
     
-    print(model.pred)
+    --print(model.pred)
     
     -- next-forward-prop start state is current-forward-prop's last state
     g_replace_table(model.start_s, model.s[params.seq_length])
@@ -320,7 +320,7 @@ print("Starting training.")
 words_per_step = params.seq_length * params.batch_size
 epoch_size = torch.floor(state_train.data:size(1) / params.seq_length)
 
-print(state_train.data:size())
+--print(state_train.data:size())
 
 while epoch < params.max_max_epoch do
 

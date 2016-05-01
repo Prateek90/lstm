@@ -153,7 +153,7 @@ function setup()
     local core_network = create_network()
     paramx, paramdx = core_network:getParameters()
     model.s = {}
-    model.pred={}
+    --model.pred={}
     model.ds = {}
     model.start_s = {}
     for j = 0, params.seq_length do
@@ -161,7 +161,7 @@ function setup()
         --for d = 1, 2 * params.layers do
         for d = 1, params.layers do
             model.s[j][d] = transfer_data(torch.zeros(params.batch_size, params.rnn_size))
-            model.pred[j][d]=transfer_data(torch.zeros(params.batch_size, params.rnn_size))
+            --model.pred[j][d]=transfer_data(torch.zeros(params.batch_size, params.rnn_size))
         end
     end
     --for d = 1, 2 * params.layers do
@@ -172,7 +172,7 @@ function setup()
     model.core_network = core_network
     model.rnns = g_cloneManyTimes(core_network, params.seq_length)
     model.norm_dw = 0
-    --model.pred= transfer_data(torch.zeros(params.seq_length))
+    model.pred= transfer_data(torch.zeros(params.seq_length))
     model.err = transfer_data(torch.zeros(params.seq_length))
 end
 

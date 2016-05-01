@@ -319,7 +319,7 @@ print("Starting training.")
 words_per_step = params.seq_length * params.batch_size
 epoch_size = torch.floor(state_train.data:size(1) / params.seq_length)
 
-print(state_train:size())
+print(state_train.data:size())
 
 while epoch < params.max_max_epoch do
 

@@ -142,7 +142,7 @@ function create_network()
     local pred               = nn.LogSoftMax()(h2y(dropped))
     local err                = nn.ClassNLLCriterion()({pred, y})
     local module             = nn.gModule({x, y, prev_s},
-                                      {err, nn.Identity()(next_s)})
+                                      {err, nn.Identity()(next_s),pred})
     -- initialize weights
     module:getParameters():uniform(-params.init_weight, params.init_weight)
     return transfer_data(module)
@@ -204,12 +204,12 @@ function fp(state)
     -- forward prop
     for i = 1, params.seq_length do
         local x = state.data[state.pos]
-        print(x:size())
+        --print(x:size())
         local y = state.data[state.pos + 1]
-        print(y:size())
+        --print(y:size())
         local s = model.s[i - 1]
-        print(model.rnns[i]:forward({x, y, s}):size())
-        model.err[i], model.s[i]= unpack(model.rnns[i]:forward({x, y, s}))
+        --print(model.rnns[i]:forward({x, y, s}):size())
+        model.err[i], model.s[i],pred = unpack(model.rnns[i]:forward({x, y, s}))
         state.pos = state.pos + 1
     end
     
@@ -236,9 +236,10 @@ function bp(state)
         -- Why 1?
         
         local derr = transfer_data(torch.ones(1))
+        local dpred = transfer_data(torch.zeros(params.batch_size, params.vocab_size))
         -- tmp stores the ds
         local tmp = model.rnns[i]:backward({x, y, s},
-                                           {derr, model.ds})[3]
+                                           {derr, model.ds,dpred})[3]
         -- remember (to, from)
         g_replace_table(model.ds, tmp)
     end
@@ -348,6 +349,10 @@ while epoch < params.max_max_epoch do
              ', dw:norm() = ' .. g_f3(model.norm_dw) ..
              ', lr = ' ..  g_f3(params.lr) ..
              ', since beginning = ' .. since_beginning .. ' mins.')
+         
+        print('saving core')
+        torch.save('word_core.net',model.core_network)
+        print('saved core')
     end
     
     -- run when epoch done

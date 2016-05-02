@@ -50,7 +50,7 @@ while true do
     num_continuations = tonumber(line[1])
     -- Initialize start state
     current_state = {}
-    for i = 1, 4 do current_state[i] = torch.zeros(20, 200):cuda() end
+    for i = 1, 4 do current_state[i] = torch.zeros(20, 200) end
     
     current_word_pos = 2
     current_word = line[current_word_pos]

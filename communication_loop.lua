@@ -60,7 +60,7 @@ while true do
 
     while continuations < num_continuations do
 	      entry = data.vocab_map[current_word]
-        x = torch.Tensor(20):cuda():fill(entry)
+        x = torch.Tensor(20):fill(entry)
       	err, new_state, pred = unpack(core:forward({x, x, current_state})) --don't care about label, just put x again
         g_replace_table(current_state, new_state)
 

@@ -1,4 +1,4 @@
-stringx = require('pl.stringx')
+stringx = require 'pl.stringx'
 require 'io'
 require 'nngraph'
 require 'base.lua'

@@ -1,7 +1,8 @@
-stringx = require 'pl.stringx'
+
 require 'io'
 require 'nngraph'
 require 'base.lua'
+stringx = require('pl.stringx')
 data = require 'data.lua'
 
 data.validdataset(1)

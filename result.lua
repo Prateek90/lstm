@@ -13,6 +13,8 @@ local vocab_map = {}
 
 local inverse_vocab_map={}
 
+model=torch.load('core.net')
+
 local function load_data(fname)
     local data = file.read(fname)
     data = stringx.replace(data, '\n', '<eos>')

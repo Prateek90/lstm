@@ -9,7 +9,7 @@ data.validdataset(1)
 data.testdataset(1)
 data.traindataset(1)
 
-core = torch.load('word_core.net')
+core = torch.load('core.net')
 g_disable_dropout(core)
 
 
@@ -47,18 +47,18 @@ while true do
     io.write('\n')--]]
     
     -- Number of times the neural net will guess a next word
-    num_continuations = tonumber(line[1])
+    num_loop = tonumber(line[1])
     -- Initialize start state
     current_state = {}
     for i = 1, 2 do current_state[i] = torch.zeros(20, 200) end
     
     current_word_pos = 2
     current_word = line[current_word_pos]
-    continuations = 0
+    initial = 0
 
     io.write(current_word.." ")
 
-    while continuations < num_continuations do
+    while initial < num_loop do
 	entry = data.vocab_map[current_word]
         x = torch.Tensor(20):fill(entry)
       	err, new_state, pred = unpack(core:forward({x, x, current_state})) --don't care about label, just put x again
@@ -67,7 +67,7 @@ while true do
     	if current_word_pos + 1 > #line then
 	      rand_idx = torch.multinomial(pred[1]:exp():float(), 1)[1]
 	      current_word = data.inverse_vocab_map[rand_idx]
-	      continuations = continuations + 1
+	      initial = initial + 1
 	    else
 	      current_word_pos = current_word_pos + 1
    	    current_word = line[current_word_pos]

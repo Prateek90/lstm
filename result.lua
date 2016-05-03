@@ -14,7 +14,7 @@ local vocab_map = {}
 local inverse_vocab_map={}
 
 model=torch.load('core.net')
-g_disable_dropout(model)
+
 
 local function load_data(fname)
     local data = file.read(fname)
@@ -105,6 +105,8 @@ end
 	
 state_test = {data=testdataset(20)}
 
+
+g_disable_dropout(model)
 local states = state_test
  
 --[[for _, state in pairs(states) do

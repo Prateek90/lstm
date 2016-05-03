@@ -351,7 +351,7 @@ while epoch < params.max_max_epoch do
              ', since beginning = ' .. since_beginning .. ' mins.')
          
         print('saving core')
-        torch.save('core.net',model.core_network)
+        torch.save('core.net',model)
         print('saved core')
     end
     

@@ -15,13 +15,6 @@ local inverse_vocab_map={}
 
 model=torch.load('core.net')
 
-local function testdataset(batch_size)
-    if testfn then
-        local x = load_data(testfn)
-        x = x:resize(x:size(1), 1):expand(x:size(1), batch_size)
-        return x
-    end
-end
 
 local function load_data(fname)
     local data = file.read(fname)
@@ -100,6 +93,16 @@ function run_test()
     print("Test set perplexity : " .. g_f3(torch.exp(perp / (len - 1))))
     g_enable_dropout(model.rnns)
 end
+	
+local function testdataset(batch_size)
+    if testfn then
+        local x = load_data(testfn)
+        x = x:resize(x:size(1), 1):expand(x:size(1), batch_size)
+        return x
+    end
+end
+
+	
 	
 state_test = {data=testdataset(20)}
 

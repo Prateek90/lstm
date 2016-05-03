@@ -15,6 +15,8 @@ local inverse_vocab_map={}
 
 model=torch.load('core.net')
 
+    model.s={}
+
 
 local function load_data(fname)
     local data = file.read(fname)
@@ -81,7 +83,7 @@ function run_test()
     local perp = 0
     local len = state_test.data:size(1)
     
-    model.s={}
+
     -- no batching here
     g_replace_table(model.s[0], model.start_s)
     for i = 1, (len - 1) do

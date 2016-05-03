@@ -50,7 +50,7 @@ while true do
     num_continuations = tonumber(line[1])
     -- Initialize start state
     current_state = {}
-    for i = 1, 4 do current_state[i] = torch.zeros(20, 200) end
+    for i = 1, 2 do current_state[i] = torch.zeros(20, 200) end
     
     current_word_pos = 2
     current_word = line[current_word_pos]
@@ -59,7 +59,7 @@ while true do
     io.write(current_word.." ")
 
     while continuations < num_continuations do
-	      entry = data.vocab_map[current_word]
+	entry = data.vocab_map[current_word]
         x = torch.Tensor(20):fill(entry)
       	err, new_state, pred = unpack(core:forward({x, x, current_state})) --don't care about label, just put x again
         g_replace_table(current_state, new_state)

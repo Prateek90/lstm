@@ -103,7 +103,7 @@ local function testdataset(batch_size)
 end
 
 	
-	
+print (model.rnns)
 state_test = {data=testdataset(20)}
 
 local states = state_test

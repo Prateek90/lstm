@@ -22,8 +22,8 @@ ptb = require('data')
 
 -- Trains 1 epoch and gives validation set ~182 perplexity (CPU).
 local params = {
-                batch_size=20, -- minibatch
-                seq_length=10, -- unroll length
+                batch_size=10, -- minibatch
+                seq_length=15, -- unroll length
                 layers=2,
                 decay=2,
                 rnn_size=200, -- hidden unit size

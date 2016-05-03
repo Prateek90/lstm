@@ -90,7 +90,7 @@ function run_test()
     for i = 1, (len - 1) do
         local x = state_test.data[i]
         local y = state_test.data[i + 1]
-        perp_tmp,new_state, pred = unpack(core:forward({x, x, current_state})) --don't care about label, just put x again
+        perp_tmp,new_state, pred = unpack(model:forward({x, x, current_state})) --don't care about label, just put x again
         g_replace_table(current_state, new_state)
         perp = perp + perp_tmp[1]
         --g_replace_table(model.s[0], model.s[1])

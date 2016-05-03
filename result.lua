@@ -108,9 +108,9 @@ state_test = {data=testdataset(20)}
 
 local states = state_test
  
-for _, state in pairs(states) do
+--[[for _, state in pairs(states) do
     reset_state(state)
-end
+end--]]
 
 
 run_test()

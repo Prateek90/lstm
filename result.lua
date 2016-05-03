@@ -93,7 +93,7 @@ function run_test()
     g_enable_dropout(model.rnns)
 end
 	
-state_test = {data=ptb.testdataset(params.batch_size)}
+state_test = {data=testdataset(params.batch_size)}
 
 local states = state_test
  

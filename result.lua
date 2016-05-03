@@ -21,7 +21,7 @@ model.s={}
         model.s[j] = {}
         --for d = 1, 2 * params.layers do
         for d = 1, 2 do
-            model.s[j][d] = transfer_data(torch.zeros(20, 200))
+            model.s[j][d] =torch.zeros(20, 200)
             --model.pred[j][d]=transfer_data(torch.zeros(params.batch_size, params.rnn_size))
         end
     end

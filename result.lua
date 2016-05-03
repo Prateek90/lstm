@@ -14,7 +14,7 @@ local vocab_map = {}
 local inverse_vocab_map={}
 
 model=torch.load('core.net')
-
+g_disable_dropout(model)
 
 local function load_data(fname)
     local data = file.read(fname)
@@ -77,7 +77,7 @@ end
 
 function run_test()
     reset_state(state_test)
-    g_disable_dropout(model.rnns)
+    --g_disable_dropout(model.rnns)
     local perp = 0
     local len = state_test.data:size(1)
     
@@ -91,7 +91,7 @@ function run_test()
         g_replace_table(model.s[0], model.s[1])
     end
     print("Test set perplexity : " .. g_f3(torch.exp(perp / (len - 1))))
-    g_enable_dropout(model.rnns)
+    --g_enable_dropout(model.rnns)
 end
 	
 local function testdataset(batch_size)
@@ -103,7 +103,6 @@ local function testdataset(batch_size)
 end
 
 	
-print (model.rnns)
 state_test = {data=testdataset(20)}
 
 local states = state_test

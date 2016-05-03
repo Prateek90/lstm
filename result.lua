@@ -17,6 +17,10 @@ model=torch.load('core.net')
 
 current_state = {}
     for i = 1, 2 do current_state[i] = torch.zeros(20, 200) end
+    
+function g_f3(f)
+    return string.format("%.3f", f)
+end
 
 
 local function load_data(fname)

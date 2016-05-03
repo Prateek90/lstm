@@ -76,7 +76,7 @@ function reset_state(state)
     state.pos = 1
     if model ~= nil and model.start_s ~= nil then
         --for d = 1, 2 * params.layers do
-        for d = 1, params.layers do
+        for d = 1, 2 do
             model.start_s[d]:zero()
         end
     end

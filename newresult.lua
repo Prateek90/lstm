@@ -44,133 +44,8 @@ function transfer_data(x)
     end
 end
 
-model = {}
+model = torch.load('core.net')
 
---local function lstm(x, prev_c, prev_h)
-  local function lstm(x, prev_h)
-    --[[-- Calculate all four gates in one go
-    --local i2h              = nn.Linear(params.rnn_size, 4*params.rnn_size)(x)
-    local i2h              = nn.Linear(params.rnn_size, 2*params.rnn_size)(x)
-    --local h2h              = nn.Linear(params.rnn_size, 4*params.rnn_size)(prev_h)
-    local h2h              = nn.Linear(params.rnn_size, 2*params.rnn_size)(prev_h)
-    local gates            = nn.CAddTable()({i2h, h2h})
-    -- Reshape to (batch_size, n_gates, hid_size)
-    -- Then slize the n_gates dimension, i.e dimension 2
-    --local reshaped_gates   =  nn.Reshape(4,params.rnn_size)(gates)
-    local reshaped_gates   =  nn.Reshape(2,params.rnn_size)(gates)
-    local sliced_gates     = nn.SplitTable(2)(reshaped_gates)
-    -- Use select gate to fetch each gate and apply nonlinearity
-    local in_gate          = nn.Sigmoid()(nn.SelectTable(1)(sliced_gates))
-    --local in_transform     = nn.Tanh()(nn.SelectTable(2)(sliced_gates))
-    local forget_gate      = nn.Sigmoid()(nn.SelectTable(2)(sliced_gates))
-    --local out_gate         = nn.Sigmoid()(nn.SelectTable(4)(sliced_gates))
-    
-    local new_h = nn.CMulTable()({forget_gate,prev_h})
-    
-    local i2newh    =nn.Linear(params.rnn_size , params.rnn_size)(x)
-    local newh2newh =nn.Linear(params.rnn_size , params.rnn_size)(new_h)
-    
-    local transform_gate    =nn.CAddTable()({i2newh , newh2newh})
-    
-    local reshape_gate      =nn.Reshape(1,params.rnn_size)(transform_gate)
-    local slice_gate        =nn.SplitTable(1)(reshape_gate)
-    local in_transform      =nn.Tanh()(nn.SelectTable(1)(slice_gate))    
-    
-    --local next_c           = nn.CAddTable()({
-    --    nn.CMulTable()({forget_gate, prev_c}),
-    --    nn.CMulTable()({in_gate,     in_transform})
-    --})
-    --local next_h           = nn.CMulTable()({out_gate, nn.Tanh()(next_c)})
-    
-    --local res=torch.Tensor():resizeAs(in_gate):fill(1)
-    local res= nn.Copy(in_gate):fill(1)
-    local newin_gate    = nn.CSubTable()({res,in_gate*-1})         
-    local next_h        = nn.CAddTable()({
-        nn.CMulTable()({prev_h,newin_gate}),
-        nn.CMulTable()({in_transform, newin_gate})        
-        })--]]
-    
-    local i2h   =nn.Linear(params.rnn_size, 3 *params.rnn_size)(x)
-    
-    local h2h   =nn.Linear(params.rnn_size, 3 * params.rnn_size)(prev_h) 
-
-    local gates =nn.CAddTable()({nn.Narrow(2, 1, 2 *params.rnn_size)(i2h),
-                                nn.Narrow(2, 1, 2 *params.rnn_size)(h2h)
-                                })
-                            
-    gates =nn.SplitTable(2)(nn.Reshape(2,params.rnn_size)(gates))
-    
-    local resetgate  =nn.Sigmoid()(nn.SelectTable(1)(gates)) 
-
-    local updategate =nn.Sigmoid()(nn.SelectTable(2)(gates)) 
-    
-    local output =nn.Tanh()(nn.CAddTable()({ nn.Narrow(2, 2 * params.rnn_size+1, params.rnn_size)(i2h),
-                                            nn.CMulTable()({resetgate, nn.Narrow(2, 2 * params.rnn_size+1, params.rnn_size)(h2h)}) })) 
-                                        
-    local next_h = nn.CAddTable()({ prev_h,nn.CMulTable()({ updategate, nn.CSubTable()({output, prev_h,}),}), }) 
-
-    return next_h
-end
-
-function create_network()
-    local x                  = nn.Identity()()
-    local y                  = nn.Identity()()
-    local prev_s             = nn.Identity()()
-    local i                  = {[0] = nn.LookupTable(params.vocab_size,
-                                                    params.rnn_size)(x)}
-    local next_s             = {}
-    --local split              = {prev_s:split(2 * params.layers)}
-    local split              = {prev_s:split(params.layers)}
-    for layer_idx = 1, params.layers do
-        --local prev_c         = split[2 * layer_idx - 1]
-        --local prev_h         = split[2 * layer_idx]
-        local prev_h         = split[layer_idx]
-        local dropped        = nn.Dropout(params.dropout)(i[layer_idx - 1])
-        --local next_c, next_h = lstm(dropped, prev_c, prev_h)
-        local next_h = lstm(dropped, prev_h)
-        --table.insert(next_s, next_c)
-        table.insert(next_s, next_h)
-        i[layer_idx] = next_h
-    end
-    
-    local h2y                = nn.Linear(params.rnn_size, params.vocab_size)
-    local dropped            = nn.Dropout(params.dropout)(i[params.layers])
-    local pred               = nn.LogSoftMax()(h2y(dropped))
-    local err                = nn.ClassNLLCriterion()({pred, y})
-    local module             = nn.gModule({x, y, prev_s},
-                                      {err, nn.Identity()(next_s),pred})
-    -- initialize weights
-    module:getParameters():uniform(-params.init_weight, params.init_weight)
-    return transfer_data(module)
-end
-
-function setup()
-    print("Creating a RNN LSTM network.")
-    local core_network = create_network()
-    paramx, paramdx = core_network:getParameters()
-    model.s = {}
-    --model.pred={}
-    model.ds = {}
-    model.start_s = {}
-    for j = 0, params.seq_length do
-        model.s[j] = {}
-        --for d = 1, 2 * params.layers do
-        for d = 1, params.layers do
-            model.s[j][d] = transfer_data(torch.zeros(params.batch_size, params.rnn_size))
-            --model.pred[j][d]=transfer_data(torch.zeros(params.batch_size, params.rnn_size))
-        end
-    end
-    --for d = 1, 2 * params.layers do
-    for d = 1, params.layers do
-        model.start_s[d] = transfer_data(torch.zeros(params.batch_size, params.rnn_size))
-        model.ds[d] = transfer_data(torch.zeros(params.batch_size, params.rnn_size))
-    end
-    model.core_network = core_network
-    model.rnns = g_cloneManyTimes(core_network, params.seq_length)
-    model.norm_dw = 0
-    model.pred= transfer_data(torch.zeros(params.seq_length))
-    model.err = transfer_data(torch.zeros(params.seq_length))
-end
 
 function reset_state(state)
     state.pos = 1
@@ -295,69 +170,14 @@ if gpu then
 end
 
 -- get data in batches
-state_train = {data=transfer_data(ptb.traindataset(params.batch_size))}
-state_valid =  {data=transfer_data(ptb.validdataset(params.batch_size))}
 state_test =  {data=transfer_data(ptb.testdataset(params.batch_size))}
 
 print("Network parameters:")
 print(params)
 
-local states = {state_train, state_valid, state_test}
+local states = {state_test}
 for _, state in pairs(states) do
     reset_state(state)
-end
-setup()
-step = 0
-epoch = 0
-total_cases = 0
-beginning_time = torch.tic()
-start_time = torch.tic()
-print("Starting training.")
-words_per_step = params.seq_length * params.batch_size
-epoch_size = torch.floor(state_train.data:size(1) / params.seq_length)
-
---print(state_train.data:size())
-
-while epoch < params.max_max_epoch do
-
-    -- take one step forward
-    perp = fp(state_train)
-    if perps == nil then
-        perps = torch.zeros(epoch_size):add(perp)
-    end
-    perps[step % epoch_size + 1] = perp
-    step = step + 1
-    
-    -- gradient over the step
-    bp(state_train)
-    
-    -- words_per_step covered in one step
-    total_cases = total_cases + params.seq_length * params.batch_size
-    epoch = step / epoch_size
-    
-    -- display details at some interval
-    if step % torch.round(epoch_size / 10) == 10 then
-        wps = torch.floor(total_cases / torch.toc(start_time))
-        since_beginning = g_d(torch.toc(beginning_time) / 60)
-        print('epoch = ' .. g_f3(epoch) ..
-             ', train perp. = ' .. g_f3(torch.exp(perps:mean())) ..
-             ', wps = ' .. wps ..
-             ', dw:norm() = ' .. g_f3(model.norm_dw) ..
-             ', lr = ' ..  g_f3(params.lr) ..
-             ', since beginning = ' .. since_beginning .. ' mins.')
-         
-        print('saving core')
-        torch.save('core.net',model)
-        print('saved core')
-    end
-    
-    -- run when epoch done
-    if step % epoch_size == 0 then
-        run_valid()
-        if epoch > params.max_epoch then
-            params.lr = params.lr / params.decay
-        end
-    end
 end
 run_test()
 print("Training is over.")

@@ -15,16 +15,8 @@ local inverse_vocab_map={}
 
 model=torch.load('core.net')
 
-model.s={}
-
-    for j = 0, 15 do
-        model.s[j] = {}
-        --for d = 1, 2 * params.layers do
-        for d = 1, 2 do
-            model.s[j][d] =torch.zeros(20, 200)
-            --model.pred[j][d]=transfer_data(torch.zeros(params.batch_size, params.rnn_size))
-        end
-    end
+current_state = {}
+    for i = 1, 2 do current_state[i] = torch.zeros(20, 200) end
 
 
 local function load_data(fname)
@@ -94,13 +86,14 @@ function run_test()
     
 
     -- no batching here
-    g_replace_table(model.s[0], model.start_s)
+    --g_replace_table(model.s[0], model.start_s)
     for i = 1, (len - 1) do
         local x = state_test.data[i]
         local y = state_test.data[i + 1]
-        perp_tmp, model.s[1] = unpack(model.rnns[1]:forward({x, y, model.s[0]}))
+        perp_tmp,new_state, pred = unpack(core:forward({x, x, current_state})) --don't care about label, just put x again
+        g_replace_table(current_state, new_state)
         perp = perp + perp_tmp[1]
-        g_replace_table(model.s[0], model.s[1])
+        --g_replace_table(model.s[0], model.s[1])
     end
     print("Test set perplexity : " .. g_f3(torch.exp(perp / (len - 1))))
     --g_enable_dropout(model.rnns)

@@ -15,6 +15,14 @@ local inverse_vocab_map={}
 
 model=torch.load('core.net')
 
+local function testdataset(batch_size)
+    if testfn then
+        local x = load_data(testfn)
+        x = x:resize(x:size(1), 1):expand(x:size(1), batch_size)
+        return x
+    end
+end
+
 local function load_data(fname)
     local data = file.read(fname)
     data = stringx.replace(data, '\n', '<eos>')

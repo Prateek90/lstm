@@ -15,7 +15,16 @@ local inverse_vocab_map={}
 
 model=torch.load('core.net')
 
-    model.s={}
+model.s={}
+
+    for j = 0, 15 do
+        model.s[j] = {}
+        --for d = 1, 2 * params.layers do
+        for d = 1, 2 do
+            model.s[j][d] = transfer_data(torch.zeros(params.batch_size, params.rnn_size))
+            --model.pred[j][d]=transfer_data(torch.zeros(params.batch_size, params.rnn_size))
+        end
+    end
 
 
 local function load_data(fname)
